@@ -150,6 +150,18 @@ bool QVGraphicsView::event(QEvent *event)
             return true;
         }
     }
+    else if (event->type() == QEvent::NativeGesture) {
+        auto *nativeEvent = static_cast<QNativeGestureEvent*>(event);
+        if (nativeEvent->gestureType() == Qt::ZoomNativeGesture) {
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    const QPoint eventPos = nativeEvent->position().toPoint();
+#else
+    const QPoint eventPos = nativeEvent->pos();
+#endif
+            zoom(nativeEvent->value()+1, eventPos);
+            return true;
+        }
+    }
     return QGraphicsView::event(event);
 }
 
@@ -176,7 +188,6 @@ void QVGraphicsView::wheelEvent(QWheelEvent *event)
         bool isTouchDevice = event->device()->type() == QInputDevice::DeviceType::TouchPad || event->device()->type() == QInputDevice::DeviceType::TouchScreen;
         // Real touchpads are likely to exhibit these characteristics in empirical testing
         isTouchDevice = isTouchDevice && event->phase() != Qt::NoScrollPhase;
-        isTouchDevice = isTouchDevice && event->device()->capabilities().testFlag(QInputDevice::Capability::NormalizedPosition);
         if (isTouchDevice)
         {
             // If this is a touch device, override setting
